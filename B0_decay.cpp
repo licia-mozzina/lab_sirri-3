@@ -6,9 +6,12 @@
 #include "RooGaussian.h"
 #include "RooPlot.h"
 #include "RooRealVar.h"
+#include "RooFitResult.h"
 #include "TAxis.h"
 #include "TCanvas.h"
 #include "TFile.h"
+#include "TStyle.h"
+#include "TH2.h"
 
 using namespace RooFit;
 
@@ -63,7 +66,7 @@ int B0_decay() {
 
   // fit the model to the data
 
-  model.fitTo(*data);
+  RooFitResult* fit_res = model.fitTo(*data, Save());
   
   // draw data and model
   RooPlot *xframe = x.frame();
@@ -93,7 +96,7 @@ int B0_decay() {
 
   //Plotting
   TCanvas *c1 = new TCanvas("c1", "B0_decay", 1600, 800);
-  c1->Divide(3);
+  c1->Divide(4);
   
   c1->cd(1);
   xframe->Draw(); 
@@ -116,6 +119,13 @@ int B0_decay() {
   pull->Draw();
 
   c1->Print("B0_decay.png");
+
+  // TCanvas c2 = new TCanvas("c2", "B0_decay_corr", 800, 400);
+  gStyle->SetPalette(1);
+  //gStyle->SetOptStat(0);
+  TH2* h = fit_res->correlationHist();
+  c1->cd(4); //chissà perchè se lo disegno su un'altra canvas non va
+  h->Draw("colz");
 
   return 0;
 }
