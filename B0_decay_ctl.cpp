@@ -25,7 +25,7 @@ int B0_decay_ctl() {
   x.setBins(24);
 
   // background model
-  RooRealVar c("c", "exponential par", -0.001, -1., 0.); // mancavano i punti decimali, era confuso
+  RooRealVar c("c", "exponential par", -0.001, -0.01, 0.); // mancavano i punti decimali, era confuso
   RooExponential bkg("bkg", "Comb. bkg.", x, c);
 
   // first gaussian
@@ -65,9 +65,14 @@ int B0_decay_ctl() {
 
   RooAddPdf model("extended model", "extended model", RooArgList(gaus0, gaus1, bkg), RooArgList(n0, n1, nb));
 
+  // Reading data from input file
   RooDataSet *data = RooDataSet::read("rarest_b0_decay.dat", x, "x");
-  RooDataSet *data_ctl = model_ctl.generate(x, 1e4); // non so se con questo o con x
 
+  // Generating data for control region
+  RooDataSet *data_ctl = model_ctl.generate(x, 1e4); 
+
+  // Define category to distinguish physics and control region 
+  // and constructing a joint data sample and pdf
   RooCategory sample("sample", "Sample category", {
                   {"Physics", 0},
                   {"Control", 1}
@@ -76,7 +81,15 @@ int B0_decay_ctl() {
   RooDataSet combData("combData", "combined data", RooArgSet(x, bg), Index(sample), Import({{"Physics", data}, {"Control", data_ctl}}));
   RooSimultaneous simPdf("simPdf", "simultaneous pdf", {{"Physics", &model}, {"Control", &model_ctl}}, sample);
 
+  // Fitting 
   // RooFitResult* fit_res = model.fitTo(*data, Save());
+  // fit_res->Print();
+
+  // RooFitResult* fit_res = model_ctl.fitTo(*data_ctl, Save());
+  // fit_res->Print();
+
+  RooFitResult* comb_fit = simPdf.fitTo(combData, Save());
+  comb_fit->Print();
 
   // Make a frame for the physics sample
   RooPlot *frame1 = x.frame(Title("Physics sample"));
@@ -84,23 +97,12 @@ int B0_decay_ctl() {
   // Plot all data tagged as physics sample
   combData.plotOn(frame1, Cut("sample==sample::Physics"));
 
-  // Plot "physics" slice of simultaneous pdf.
-  // NBL You _must_ project the sample index category with data using ProjWData
-  // as a RooSimultaneous makes no prediction on the shape in the index category
-  // and can thus not be integrated.
-  // In other words: Since the PDF doesn't know the number of events in the different
-  // category states, it doesn't know how much of each component it has to project out.
-  // This information is read from the data.
+  // Plot "physics" slice of simultaneous pdf
   simPdf.plotOn(frame1, Slice(sample, "Physics"), ProjWData(sample, combData));
   simPdf.plotOn(frame1, Slice(sample, "Physics"), Components("bkg"), ProjWData(sample, combData), LineStyle(kDashed));
 
-  // The same plot for the control sample slice. We do this with a different
-  // approach this time, for illustration purposes. Here, we are slicing the
-  // dataset and then use the data slice for the projection, because then the
-  // RooFit::Slice() becomes unnecessary. This approach is more general,
-  // because you can plot sums of slices by using logical or in the Cut()
-  // command.
-  RooPlot *frame2 = x.frame(Bins(30), Title("Control sample")); //non ho capito il senso dei bin
+  // Plot "sample" slice of simultaneous pdf
+  RooPlot *frame2 = x.frame(Title("Control sample")); 
   RooAbsData* slicedData{combData.reduce(Cut("sample==sample::Control"))};
   slicedData->plotOn(frame2);
   simPdf.plotOn(frame2, ProjWData(sample, *slicedData));
@@ -108,7 +110,7 @@ int B0_decay_ctl() {
  
   // The same plot for all the phase space. Here, we can just use the original
   // combined dataset.
-  RooPlot *frame3 = x.frame(Title("Both samples"));
+  RooPlot *frame3 = x.frame(Bins(24), Title("Both samples"));
   combData.plotOn(frame3);
   simPdf.plotOn(frame3, ProjWData(sample, combData));
   simPdf.plotOn(frame3, Components("bkg, model_ctl"), ProjWData(sample, combData),

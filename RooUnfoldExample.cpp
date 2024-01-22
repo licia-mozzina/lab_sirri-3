@@ -25,6 +25,7 @@ using std::endl;
 //#include "RooUnfoldIds.h"
 #endif
 
+
 //==============================================================================
 // Global definitions
 //==============================================================================
@@ -49,7 +50,9 @@ Double_t smear (Double_t xt)
 //==============================================================================
 
 void RooUnfoldExample()
-{
+{  
+  //gSystem->Load("~/RooUnfold/build/libRooUnfold.so");
+
   cout << "==================================== TRAIN ====================================" << endl;
   RooUnfoldResponse response (40, -10.0, 10.0);
 
@@ -91,6 +94,8 @@ void RooUnfoldExample()
 
   c1->SaveAs("RooUnfoldExample.pdf");
 
+
+//****************************************************************
   
   TMatrixD responseMatrix = response.Mresponse();
   
@@ -125,6 +130,44 @@ void RooUnfoldExample()
   model_meas_Rinv->Draw("HIST SAME");
   c4->cd(4);
   model_meas_Rinv->Draw("HIST");
+
+//*****************************************************************
+
+
+//pseudoexperiments part
+
+for (Int_t i = 1; i < hUnfold.GetNbinsX() + 1; i++) { //perchè partiamo da uno?
+  print hUnfold->GetBinError(i);
+}
+
+TH1D* hTrue_psexp= new TH1D ("h_truth", "Test Truth",  40, -10.0, 10.0);
+TH1D* hMeas_psexp= new TH1D ("h_meas", "Test Measured", 40, -10.0, 10.0);
+
+// pseudo epx loop
+Int_t nToy = 100;
+TTree * t = new TTree("t", "pseudoexp_spectra");
+RooUnfoldResponse response_psexp (40, -10.0, 10.0);
+RooUnfoldBayes pseudoexp_spectrum (&response_psexp, hMeas, 4);
+t->Branch("pseudoexp_spectrum", &pseudoexp_spectrum);
+
+for (Int_t j = 0; j < nToy; j++) {
+  
+  // RooUnfoldResponse response_psexp (40, -10.0, 10.0);
+  // RooUnfoldBayes   unfold_psexp (&response_psexp, hMeas, 4);    
+  TH1D* hUnfold_psexp = (TH1D*) unfold_psexp.Hunfold();
+  
+  for (Int_t i=0; i< hMeas->GetNBins(); i++) {
+    Double_t xt= gRandom->Poisson(hMeas->GetBinContent(i)), x= smear (xt); //devo settarlo come valore al contenuto del bin
+    hTrue_psexp->Fill(xt);
+    t->Fill();
+    if (x!=cutdummy) hMeas_psexp->Fill(x);
+  }
+}
+
+
+
+
+
 }
 
 #ifndef __CINT__
