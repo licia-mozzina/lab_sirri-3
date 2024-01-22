@@ -81,41 +81,36 @@ int B0_decay_ctl() {
   RooDataSet combData("combData", "combined data", RooArgSet(x, bg), Index(sample), Import({{"Physics", data}, {"Control", data_ctl}}));
   RooSimultaneous simPdf("simPdf", "simultaneous pdf", {{"Physics", &model}, {"Control", &model_ctl}}, sample);
 
-  // Fitting 
-  // RooFitResult* fit_res = model.fitTo(*data, Save());
-  // fit_res->Print();
-
-  // RooFitResult* fit_res = model_ctl.fitTo(*data_ctl, Save());
-  // fit_res->Print();
-
+  // Simultaneous fit
   RooFitResult* comb_fit = simPdf.fitTo(combData, Save());
   comb_fit->Print();
 
-  // Make a frame for the physics sample
+  // Plotting physics sample
   RooPlot *frame1 = x.frame(Title("Physics sample"));
- 
-  // Plot all data tagged as physics sample
   combData.plotOn(frame1, Cut("sample==sample::Physics"));
+  frame1->GetXaxis()->SetTitle("m(p#bar{p})[MeV/c^{2}]");
 
-  // Plot "physics" slice of simultaneous pdf
+  // Plotting "physics" slice of simultaneous pdf
   simPdf.plotOn(frame1, Slice(sample, "Physics"), ProjWData(sample, combData));
   simPdf.plotOn(frame1, Slice(sample, "Physics"), Components("bkg"), ProjWData(sample, combData), LineStyle(kDashed));
 
-  // Plot "sample" slice of simultaneous pdf
+  // Plotting "sample" slice of simultaneous pdf
   RooPlot *frame2 = x.frame(Title("Control sample")); 
   RooAbsData* slicedData{combData.reduce(Cut("sample==sample::Control"))};
   slicedData->plotOn(frame2);
   simPdf.plotOn(frame2, ProjWData(sample, *slicedData));
   simPdf.plotOn(frame2, Components("model_ctl"), ProjWData(sample, *slicedData), LineStyle(kDashed));
+  frame2->GetXaxis()->SetTitle("m(p#bar{p})[MeV/c^{2}]");
  
-  // The same plot for all the phase space. Here, we can just use the original
-  // combined dataset.
+  // Plotting both samples
   RooPlot *frame3 = x.frame(Bins(24), Title("Both samples"));
   combData.plotOn(frame3);
   simPdf.plotOn(frame3, ProjWData(sample, combData));
   simPdf.plotOn(frame3, Components("bkg, model_ctl"), ProjWData(sample, combData),
                 LineStyle(kDashed));
- 
+  frame3->GetXaxis()->SetTitle("m(p#bar{p})[MeV/c^{2}]");
+
+  // Creating canvas and saving plot 
   TCanvas *c1 = new TCanvas("B0_decay_ctl", "B0 decay control model", 1200, 400);
   c1->Divide(3);
   auto draw = [&](int i, RooPlot & frame) {
@@ -127,6 +122,8 @@ int B0_decay_ctl() {
   draw(1, *frame1);
   draw(2, *frame2);
   draw(3, *frame3);
+
+  c1->Print("B0_decay_ctl.png");
   
   return 0;
 }

@@ -96,7 +96,7 @@ int B0_decay() {
 
   //Plotting
   TCanvas *c1 = new TCanvas("c1", "B0_decay", 1600, 800);
-  c1->Divide(4);
+  c1->Divide(2,2);
   
   c1->cd(1);
   xframe->Draw(); 
