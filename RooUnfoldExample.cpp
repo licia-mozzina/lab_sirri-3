@@ -156,16 +156,16 @@ for (Int_t k = 0; k < nToy; k++) {
   
   // RooUnfoldResponse response_psexp (40, -10.0, 10.0);
   // RooUnfoldBayes   unfold_psexp (&response_psexp, hMeas, 4);    
-  TH1D* hUnfold_psexp = (TH1D*) unfold_psexp.Hunfold();
+  //TH1D* hUnfold_psexp = (TH1D*) unfold_psexp.Hunfold();
   
-  for (Int_t i=0; i< hMeas->GetNBinsX(); i++) {
+  for (Int_t i=0; i< hMeas->GetNbinsX(); i++) {
     Double_t xt= gRandom->Poisson(hMeas->GetBinContent(i)), x= smear (xt); //devo settarlo come valore al contenuto del bin
     hTrue_psexp->Fill(xt);
     if (x!=cutdummy) hMeas_psexp->Fill(x);
   }
-      hUnfold_psexp[k]= (TH1D) unfold_psexp.Hunfold();
+      hUnfold_psexp[k] = (TH1D *) unfold_psexp.Hunfold();
 
-      for (Int_t i=1; i < hUnfold_psexp[k]->GetNBinsX() + 1; ++i) {
+      for (Int_t i=1; i < hUnfold_psexp[k]->GetNbinsX() + 1; ++i) {
         if (k == 0) {
           bin_content_sum.push_back(hUnfold_psexp[k]->GetBinContent(i)); // from first pesudo exp we set the number of vector elements
         } else {                                                    
@@ -191,13 +191,15 @@ std::vector<Double_t> cov_ij_psexp;
       cov_ij_psexp.push_back(cov_ij_N / nToy);
     }
   }
-}
 
-// Comparing the uncertainties
-for (Int_t i = 0; i < cov_ij_psexp.size(); ++i) {
+  // Comparing the uncertainties
+  for (Int_t i = 0; i < cov_ij_psexp.size(); ++i) {
   Double_t cov_ij_psexp_root = TMath::Sqrt(cov_ij_psexp[i]);
   printf("D'Agostini %f | Pseudo experiment %f \n", cov_ij_dag[i], cov_ij_psexp_root);
 }
+}
+
+
 
 #ifndef __CINT__
 int main () { RooUnfoldExample(); return 0; }  // Main program when run stand-alone
