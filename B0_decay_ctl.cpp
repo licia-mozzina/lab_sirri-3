@@ -17,8 +17,7 @@
 using namespace RooFit;
 
 
-// Di base è finito, bisogna commentare e capire come mai
-// ho un uotput diverso sul terminale rispetto all'esempio di root per quanto riguarda le funzioni plottate
+
 int B0_decay_ctl() {
   // first declare the observable
   RooRealVar x("x", "m(p-pbar)", 5090., 5590.);
