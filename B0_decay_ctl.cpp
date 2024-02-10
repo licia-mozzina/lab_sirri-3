@@ -39,7 +39,7 @@ int B0_decay_ctl() {
 
   // Background in control region
   RooRealVar bg("bg", "bg_control_region", 4000., 5000.);
-  RooExponential model_ctl("model_ctl", "control_bkg", x, c);
+  RooExponential model_ctl("model_ctl", "control_bkg", bg, c);
   c.setVal(-1.0e-3);
 
   /*
@@ -68,7 +68,7 @@ int B0_decay_ctl() {
   RooDataSet *data = RooDataSet::read("rarest_b0_decay.dat", x, "x");
 
   // Generating data for control region
-  RooDataSet *data_ctl = model_ctl.generate(x, 1e4); 
+  RooDataSet *data_ctl = model_ctl.generate(bg, 1e4); 
 
   // Define category to distinguish physics and control region 
   // and constructing a joint data sample and pdf

@@ -173,7 +173,7 @@ void unfold_psexp() {
     Double_t cov_ij_psexp_root = TMath::Sqrt(cov_ii_psexp[i]);
     printf("D'Agostini %f | Pseudo experiment %f \n", cov_ij_dag[i],
            cov_ij_psexp_root);
-  }
+  } // fanno un po' schifo
 }
 
 #ifndef __CINT__
